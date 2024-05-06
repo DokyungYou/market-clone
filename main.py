@@ -2,6 +2,10 @@ from fastapi import FastAPI, UploadFile,Form
 from fastapi.staticfiles import StaticFiles
 from typing import Annotated  ###18:50
 
+import sqlite3
+con = sqlite3.connect('database.db', check_same_thread=False) #
+cur = con.cursor() #
+
 app = FastAPI()
 
 
@@ -19,12 +23,21 @@ app = FastAPI()
 #'Annotated'를 사용하여 변수를 지정 시 변수의 타입에 대한 추가적인 정보 제공가능
 # 코드의 가독성 향상, 변수사용벙에 대한 명확한 이해
 @app.post('/items') #실수로 경로에 /를 빠뜨렸는데 docs에서 test불가했었음
-def create_item(image:UploadFile, 
+async def create_item(image:UploadFile, 
                 title:Annotated[str,Form()], # title정보는 form data형식으로 문자열로 받는다는 뜻
                 price:Annotated[int,Form()],
                 description:Annotated[str,Form()],
                 place:Annotated[str,Form()]):
     print(image, title, price, description, place)
+    
+    #이미지 데이터는 BLOB타입으로 크게 오기때문에 데이터를 읽을 시간이 필요함
+    image_bytes = await image.read()
+    cur.execute(f"""
+                INSERT INTO items(title, image, price, description, place)
+                VALUES('{title}','{image_bytes.hex()}',{price},'{description}','{place}')
+                """)
+    
+    con.commit()
     return 200
 
 
