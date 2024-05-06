@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>글쓰기 페이지</title>
+  </head>
+  <body>
+    <form id="write-form">
+      <div>
+        <label for="image">이미지</label
+        ><input type="file" id="image" name="image" />
+      </div>
+
+      <div>
+        <label for="title">글 제목</label>
+        <input type="text" id="title" name="title" placeholder="글 제목" />
+      </div>
+
+      <div>
+        <label for="price">가격</label>
+        <input
+          type="number"
+          id="price"
+          name="price"
+          placeholder="가격(선택사항)"
+        />
+      </div>
+
+      <div>
+        <label for="description">설명</label>
+        <input
+          type="text"
+          id="description"
+          name="description"
+          placeholder="~~ 동에 올릴 게시글 내용을 작성해주세요.
+        "
+        />
+      </div>
+
+      <div>
+        <label for="place">장소</label>
+        <input type="text" id="place" name="place" />
+      </div>
+      <input type="submit" />
+    </form>
+    <div class="media-info-msg">화면 사이즈를 줄여주세요.</div>
+    <script src="write.js"></script>
+  </body>
+</html>
