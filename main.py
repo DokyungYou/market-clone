@@ -1,6 +1,9 @@
 from fastapi import FastAPI, UploadFile,Form
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from typing import Annotated  ###18:50
+
 
 import sqlite3
 con = sqlite3.connect('database.db', check_same_thread=False) #
@@ -45,9 +48,32 @@ async def create_item(image:UploadFile,
     return 200
 
 
+@app.get("/items")
+async def get_itmes():
+    
+    # 여기선 왜 cursor를 또 새로 만들지? post에서는 전역변수로 선언한거 썼는데
+    cur = con.cursor()
+    
+    
+    # 컬럼명도 같이 가져오게 함
+    # ex) {1,'노트북''삼성'}    ->   {id: 1, title: '노트북', company: '삼성'}
+    con.row_factory = sqlite3.Row
+    rows = cur.execute(f"""
+                       SELECT * FROM items;
+                       """).fetchall()  # SQL 쿼리 결과에서 모든 행을 가져오는 메서드
+    
+    # for row in rows: 데이터베이스에서 가져온 각 행을 순회
+    # dict(row): 각 행을 Python 사전(dictionary) 객체로 변환
+    # jsonable_encoder(): Pydantic의 함수로, Python 객체를 JSON으로 직렬화할 수 있는 형태로 변환
+    # JSONResponse(): FastAPI의 함수로, JSON 형식의 데이터를 반환하는 응답을 생성
+    
+    #데이터베이스에서 가져온 행(row)들을 JSON 형식으로 변환하여 반환하는 작업을 수행
+    return JSONResponse(jsonable_encoder(dict(row) for row in rows)) 
 
 
 
+
+#============================================================================================================================
 # 매번 잊으면 fastapi static 으로 공식문서 검색하자
 # 실수했던 부분: mount경로를 /static로 해놓고 웹에 왜 not found지 하고 십몇분 낭비했음
 
