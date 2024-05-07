@@ -16,7 +16,7 @@ const getTimeDelta = (timestamp) => {
     return `${hour}시간 전`;
   } else if (minute > 0) {
     return `${minute}분 전`;
-  } else if (second >= 0) {
+  } else if (second > 0) {
     return `${second}초 전`;
   } else {
     return "방금 전";
@@ -27,7 +27,7 @@ const renderData = (data) => {
   const main = document.querySelector("main");
 
   // 가벼운 클론코딩이라 데이터를 한꺼번에 가져오고 reverse하는 방식 사용
-  data.reverse().forEach((object) => {
+  data.reverse().forEach(async (object) => {
     // 순수 html, js로만 구현하기때문에 수작업
     const itemDiv = document.createElement("div"); //js에서 직접 동적으로 HTML 요소생성
     itemDiv.className = "item-list";
@@ -36,7 +36,10 @@ const renderData = (data) => {
     itemImageDiv.className = "item-list__img";
 
     const itemImage = document.createElement("img");
-    itemImage.src = object.image; //임시
+    const response = await fetch(`/images/ ${object.id}`);
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    itemImage.src = url;
 
     const itemInfoDiv = document.createElement("div");
     itemInfoDiv.className = "item-list__info";
