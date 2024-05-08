@@ -85,6 +85,15 @@ async def get_image(item_id):
     return Response(content=bytes.fromhex(image_bytes))
 
 
+
+
+
+@app.post('/signup')
+def signup(id:Annotated[str,Form()],password: Annotated[str,Form()]):
+    print(password)
+    return 200
+    
+
 #============================================================================================================================
 # 매번 잊으면 fastapi static 으로 공식문서 검색하자
 # 실수했던 부분: mount경로를 /static로 해놓고 웹에 왜 not found지 하고 십몇분 낭비했음
