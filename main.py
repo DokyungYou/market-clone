@@ -2,6 +2,9 @@ from fastapi import FastAPI, UploadFile,Form, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
+from fastapi_login import LoginManager
+from fastapi_login.exceptions import InvalidCredentialsException
+
 from typing import Annotated  ###18:50
 
 
@@ -10,6 +13,55 @@ con = sqlite3.connect('database.db', check_same_thread=False) #
 cur = con.cursor() #
 
 app = FastAPI()
+
+#sha256과 달리 jwt는 암호화뿐아니라 복호화도 가능해서 secret key를 노출시키면 안된다.
+SECRET = "martket-clone-key"
+manager = LoginManager(SECRET,'/login') # secret key와 발급받을 url을 넣어준다.
+
+
+###
+@manager.user_loader()
+def validate_user(id):
+    
+    con.row_factory = sqlite3.Row
+    cur = con.cursor() #커서를 현재 위치로 업데이트
+    
+    user = cur.execute(f"""
+                       SELECT * FROM users WHERE id = '{id}'
+                       """).fetchone()
+    return user
+
+
+
+@app.post('/login')
+def login(id:Annotated[str, Form()],
+          password:Annotated[str,Form()]):
+    
+
+    user = validate_user(id)
+    # print(user.id) ##AttributeError: 'tuple' object has no attribute 'id'
+    
+    print("클라이언트에서 넘어온 비밀번호(암호화된 것): "+ password)
+    print("db에서 가져온 비밀번호" + user['password'])
+
+    #raise: 에러메세지 던질 수 있음
+    if not user:
+        raise InvalidCredentialsException # -> 401을 자동으로 생성해서 내려줌
+    elif password != user['password']:
+        print("비밀번호 불일치")
+        raise InvalidCredentialsException
+    
+    
+    access_token = manager.create_access_token(data={
+        'name': user['name'],
+        'email':user['email'],
+        'id': user['id']
+    })
+    
+    print("access_token: " + access_token)
+    return {'access_token':access_token}
+
+
 
 
 
@@ -51,7 +103,7 @@ async def create_item(image:UploadFile,
 @app.get("/items")
 async def get_itmes():
     
-    # 여기선 왜 cursor를 또 새로 만들지? post에서는 전역변수로 선언한거 썼는데
+    # 여기선 왜 cursor를 또 새로 만들지? post에서는 전역변수로 선언한거 썼는데? -> 커서를 업데이트해줘야하는 것이었다.
     cur = con.cursor()
     
     
