@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile,Form, Response
+from fastapi import FastAPI, UploadFile,Form, Response,Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -21,13 +21,17 @@ manager = LoginManager(SECRET,'/login') # secret key와 발급받을 url을 넣�
 
 ###
 @manager.user_loader()
-def validate_user(id):
+def validate_user(data):
+    WHERE_STATEMENTS = f'id="{data}"'
+    if type(data) == dict: 
+        WHERE_STATEMENTS = f'id="{data['id']}"'
+    
     
     con.row_factory = sqlite3.Row
     cur = con.cursor() #커서를 현재 위치로 업데이트
     
     user = cur.execute(f"""
-                       SELECT * FROM users WHERE id = '{id}'
+                       SELECT * FROM users WHERE {WHERE_STATEMENTS}
                        """).fetchone()
     return user
 
@@ -53,13 +57,14 @@ def login(id:Annotated[str, Form()],
     
     
     access_token = manager.create_access_token(data={
-        'name': user['name'],
+        'sub':{'name': user['name'],
         'email':user['email'],
-        'id': user['id']
+        'id': user['id']}
+        
     })
     
     print("access_token: " + access_token)
-    return {'access_token':access_token}
+    return {'access_token': access_token}
 
 
 
@@ -83,7 +88,8 @@ async def create_item(image:UploadFile,
                 price:Annotated[int,Form()],
                 description:Annotated[str,Form()],
                 place:Annotated[str,Form()],
-                created_at:Annotated[int,Form()]
+                created_at:Annotated[int,Form()],
+                # user=Depends(manager)  # 나중에 구현
                 ):
     print(image, title, price, description, place)
     
@@ -100,8 +106,9 @@ async def create_item(image:UploadFile,
     return 200
 
 
+### 유저가 인증된 상태에서만 응답을 보내도록 수정
 @app.get("/items")
-async def get_itmes():
+async def get_itmes(user=Depends(manager)):
     
     # 여기선 왜 cursor를 또 새로 만들지? post에서는 전역변수로 선언한거 썼는데? -> 커서를 업데이트해줘야하는 것이었다.
     cur = con.cursor()
