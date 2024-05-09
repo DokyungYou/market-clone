@@ -4,7 +4,7 @@ main {
 
 .item-list {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
   border-bottom: 1px solid #ededef;
   padding: 20px 0 20px 0;
@@ -22,7 +22,8 @@ main {
 }
 
 .item-list__img img {
-  width: 50px;
+  width: 100%;
+  height: auto;
 }
 
 .item-list__info {
